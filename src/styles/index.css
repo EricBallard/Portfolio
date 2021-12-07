@@ -1,0 +1,12 @@
+body {
+  /* Global */
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #454545;
+
+  /* Platform specific - Font smoothing */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
