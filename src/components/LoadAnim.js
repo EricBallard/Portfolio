@@ -1,12 +1,12 @@
-import React, { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import '../styles/LoadAnim.css'
 
 // Animation data
 const desiredFPS = 60,
   renderInterval = 1000 / desiredFPS
 
-let playAnimation = true,
-  lastRender = undefined,
+let animStage = 1,
+  lastRender = -1,
   animSpeed = 0.075
 
 let indicators = []
@@ -28,16 +28,63 @@ let cWidth = undefined,
   xOffset = undefined,
   yOffset = undefined
 
+CanvasRenderingContext2D.prototype.roundRect = function (
+  x,
+  y,
+  width,
+  height,
+  radius,
+  fill,
+  stroke
+) {
+  if (typeof stroke == 'undefined') {
+    stroke = true
+  }
+  if (typeof radius === 'undefined') {
+    radius = 5
+  }
+  this.beginPath()
+  this.moveTo(x + radius, y)
+  this.lineTo(x + width - radius, y)
+  this.quadraticCurveTo(x + width, y, x + width, y + radius)
+  this.lineTo(x + width, y + height - radius)
+  this.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
+  this.lineTo(x + radius, y + height)
+  this.quadraticCurveTo(x, y + height, x, y + height - radius)
+  this.lineTo(x, y + radius)
+  this.quadraticCurveTo(x, y, x + radius, y)
+  this.closePath()
+  if (stroke) {
+    this.stroke()
+  }
+  if (fill) {
+    this.fill()
+  }
+}
+
 const draw = ctx => {
   // Clear canvas
-  ctx.clearRect(0, 0, cWidth, cHeight)
+  ctx.fillStyle = '#454545'
+  ctx.fillRect(0, 0, cWidth, cHeight)
+
+  /** DEBUG */
+  // ctx.strokeStyle = 'green'
+  // ctx.lineWidth = 10;
+  // ctx.strokeRect(2, 0, cWidth, cHeight)
 
   // Set draw color
   ctx.fillStyle = 'white'
 
-  // Draw indicators
+  // STAGE 2 - Draw loading bar
+  if (animStage === 2) {
+    ctx.roundRect(xOffset - 100, yOffset - 15, 200, 30, true, true)
+  }
+
+  // STAGE 1 - Draw dots aka indicators
   for (let index = 0; index < 5; index++) {
     const i = indicators[index]
+
+    if (i === null) continue
 
     // Save context
     ctx.save()
@@ -46,7 +93,7 @@ const draw = ctx => {
     ctx.beginPath()
 
     // X, y, radius, start angle, end angle
-    ctx.arc(i.x, i.y, 15, 0, 2 * Math.PI)
+    ctx.arc(i.x, i.y, 60, 0, 2 * Math.PI)
     ctx.fill()
     ctx.closePath()
 
@@ -55,7 +102,7 @@ const draw = ctx => {
 
     if (i.freeze) continue
 
-    // Dots must first "rise" up before circular motion
+    // Dots must first "rise" up/down before circular motion
     if (!i.risen) {
       // Delay
       if (i.delay > 0) {
@@ -65,36 +112,42 @@ const draw = ctx => {
       }
 
       // De/Ascend
-      let desiredY = cHeight / 2 + 100
+      let desiredY = cHeight / 2 + 400
 
       if (i.invert) {
-        i.y += 2
+        i.y += 10
 
         if (i.y >= desiredY) i.risen = true
       } else {
-        i.y -= 2
+        i.y -= 10
 
         if (i.y <= cHeight - desiredY) i.risen = true
       }
     } else {
       // Ciruclar motion
-      i.x = xOffset + 100 * Math.cos(animSpeed * i.step)
-      i.y = yOffset + 100 * Math.sin(animSpeed * i.step)
+      i.x = xOffset + 400 * Math.cos(animSpeed * i.step)
+      i.y = yOffset + 400 * Math.sin(animSpeed * i.step)
 
       if (i.backwards) i.step--
       else i.step++
 
-      // 1 full lap
+      // Done
       if (index === 2 && i.step === 43) {
+        //Freeze and set end finite position
         indicators[1].freeze = true
+        indicators[1].x = xOffset + 400
+        indicators[1].y = yOffset
+
         i.freeze = true
+        i.x = xOffset - 400
+        i.y = yOffset
       }
 
-      console.log(index + ' Step ' + i.step)
-
       if (index === 4 && i.step === -1) {
-        indicators[3].freeze = true
-        i.freeze = true
+        // Set to null so we're not drawing 2 extra cirlces every frame
+        indicators[3] = null
+        indicators[4] = null
+        animStage++
       }
     }
   }
@@ -114,50 +167,39 @@ const animate = ctx => {
 }
 
 // Component
-function LoadAnim() {
-  // Create refrence to canvas, as defined in JSX
-  const canvas = useRef(null)
-  const ctx = useRef(null)
-
+const LoadAnim = ({ canvasRef }) => {
   // UseEffect hook, runs on componentDidMount and/or if dependency is updated
   useEffect(() => {
-    if (canvas.current) {
-      // Get graphics context
-      ctx.current = canvas.current.getContext('2d')
+    // Cache current refrence and canvas context
+    const canvas = canvasRef.current,
+      ctx = canvas.getContext('2d')
 
-      cWidth = canvas.current.width
-      cHeight = canvas.current.height
+    // Size to window dimensions
+    canvas.width = 2048 //window.innerWidth
+    canvas.height = 2048 //window.innerHeight
 
-      xOffset = cWidth / 2
-      yOffset = cHeight / 2
+    cWidth = canvas.width
+    cHeight = canvas.height
 
-      // Init indicators - X, Y, STEP, DELAY, INVERT, BACKTRACK
-      indicators[0] = new Indicator(xOffset, yOffset, 0, false, false) // Center
-      indicators[0].freeze = true
+    xOffset = cWidth / 2
+    yOffset = cHeight / 2
 
-      indicators[1] = new Indicator(xOffset, yOffset, 63, 0, false, false)
-      indicators[2] = new Indicator(xOffset, yOffset, 21, 0, true, false)
+    // Init indicators - X, Y, STEP, DELAY, INVERT, BACKTRACK
+    indicators[0] = new Indicator(xOffset, yOffset, 0, false, false) // Center
+    indicators[0].freeze = true
 
-      indicators[3] = new Indicator(xOffset, yOffset, 63, 21, false, true)
-      indicators[4] = new Indicator(xOffset, yOffset, 21, 21, true, true)
+    indicators[1] = new Indicator(xOffset, yOffset, 63, 0, false, false)
+    indicators[2] = new Indicator(xOffset, yOffset, 21, 0, true, false)
 
-      // Start animation
-      animate(ctx.current)
-    }
-  }, [canvas])
+    indicators[3] = new Indicator(xOffset, yOffset, 63, 0, false, true)
+    indicators[4] = new Indicator(xOffset, yOffset, 21, 0, true, true)
+
+    // Start animation
+    animate(ctx)
+  })
 
   // JSX
-  return (
-    // Define canvas with refrence
-    <div>
-      <canvas
-        className='canvas'
-        ref={canvas}
-        width={window.innerWidth / 2}
-        height={window.innerHeight / 2}
-      />
-    </div>
-  )
+  return null
 }
 
 export default LoadAnim

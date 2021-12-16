@@ -1,14 +1,14 @@
 // React DOM
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom'
 
-// Styles
-import './styles/index.css';
+// Style
+import './styles/index.css'
 
-// Components
-import LoadAnim from './components/LoadAnim';
+// Component
+import App from './App.js'
 
-// Meat & Potatoes 
+// Meat & Potatoes
 ReactDOM.render(
-    <LoadAnim />,
+  <App/>,
   document.getElementById('root')
-);
+)
