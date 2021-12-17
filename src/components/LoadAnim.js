@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react'
-import '../styles/LoadAnim.css'
+import { useEffect } from 'react'
 
 // Animation data
 const desiredFPS = 60,

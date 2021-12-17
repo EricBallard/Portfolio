@@ -2,10 +2,48 @@ body {
   /* Global */
   margin: 0;
   padding: 0;
+
   overflow: hidden;
+  cursor: none;
 
   /* Platform specific - Font smoothing */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+.canvas {
+  position: absolute;
+
+  /* Hide*/
+  display: none;
+}
+
+.cursor {
+  transform: translate(-50%, -50%);
+  left: 0;
+  top: 0;
+
+  width: 16px;
+  height: 16px;
+
+  /* Circlular border */
+  border: 2px solid white;
+  border-radius: 50%;
+
+  position: fixed;
+}
+
+.cursor-tail {
+  transform: translate(-50%, -50%) scale(1);
+  left: 0;
+  top: 0;
+
+  width: 8px;
+  height: 8px;
+
+  background-color: #454545;
+  border-radius: 50%;
+
+  position: fixed;
+
+}

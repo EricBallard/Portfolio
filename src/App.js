@@ -1,15 +1,17 @@
 import { useRef } from 'react'
 
-// Components
+// Children components
 import LoadAnim from './components/LoadAnim'
 import Scene from './components/Scene'
 
+// Parent Component
 const App = () => {
   // Refrences
   const canvasRef = useRef(null)
 
+  // Return JSX, populated with children components
   return (
-    <div>
+    <div className='app'>
       {/* Create canvas and bind refrence */}
       <canvas ref={canvasRef} className='canvas' />
 
@@ -20,4 +22,5 @@ const App = () => {
   )
 }
 
+// Expose
 export default App

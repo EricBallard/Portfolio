@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 
 /**
@@ -88,8 +88,11 @@ import * as THREE from 'three'
 const Scene = ({ canvasRef }) => {
   const mountRef = useRef(null)
 
-  useEffect(() => {
+  // Cursor states
+  const [cursorX, setCX] = useState(0)
+  const [cursorY, setCY] = useState(0)
 
+  useEffect(() => {
     // Set scene and perspective
     var scene = new THREE.Scene()
     scene.background = new THREE.Color('#454545')
@@ -134,8 +137,14 @@ const Scene = ({ canvasRef }) => {
     window.addEventListener(
       'mousemove',
       e => {
-        const x = e.pageX
+        const x = e.pageX,
+          y = e.pageY
 
+        // Update cursor position
+        setCX(x)
+        setCY(y)
+
+        // Update scene tilt
         const halfWidth = window.innerWidth / 2,
           tilt = (x > halfWidth ? x - halfWidth : x) / halfWidth
 
@@ -151,19 +160,21 @@ const Scene = ({ canvasRef }) => {
     )
 
     // Window resize handler
-    window.addEventListener(
-      'resize',
-      () => {
-        const w = window.innerWidth,
-          h = window.innerHeight
+    const resize = () => {
+      const w = window.innerWidth,
+        h = window.innerHeight
 
-        // Update scene with window dimensions
-        renderer.setSize(w, h)
-        camera.aspect = w / h
-        camera.updateProjectionMatrix()
-      },
-      false
-    )
+      // Update scene with window dimensions
+      renderer.setSize(w, h)
+      camera.aspect = w / h
+      camera.updateProjectionMatrix()
+    }
+
+    // Register listeners
+    window.addEventListener('resize', resize, false)
+
+    // Animate
+    let animationID = -1
 
     const animate = function () {
       // Update Canvas
@@ -173,18 +184,29 @@ const Scene = ({ canvasRef }) => {
       renderer.render(scene, camera)
 
       // Loop
-      requestAnimationFrame(animate)
+      animationID = requestAnimationFrame(animate)
     }
 
-    // Animate
     animate()
 
     // ComponentWillUnmount
-    return () => mount.removeChild(renderer.domElement)
-  })
+    return () => {
+      // Clean up
+      cancelAnimationFrame(animationID)
+      mount.removeChild(renderer.domElement)
+      window.removeEventListener('resize', resize)
+    }
+  }, [canvasRef, setCX, setCY])
 
   // Return JSX
-  return <div ref={mountRef} />
+  return (
+    /* Mount for webgl element */
+    <div ref={mountRef}>
+      {/* Cursor */}
+      <div className='cursor' style={{ left: cursorX, top: cursorY }} />
+      <div className='cursor-tail' style={{ left: cursorX, top: cursorY }} />
+    </div>
+  )
 }
 
 // Expose
