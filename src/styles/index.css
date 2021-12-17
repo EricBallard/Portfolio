@@ -23,8 +23,8 @@ body {
   left: 0;
   top: 0;
 
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
 
   /* Circlular border */
   border: 2px solid white;
@@ -33,17 +33,26 @@ body {
   position: fixed;
 }
 
-.cursor-tail {
-  transform: translate(-50%, -50%) scale(1);
-  left: 0;
-  top: 0;
+.cursor-child {
+  position: absolute;
 
-  width: 8px;
-  height: 8px;
+  width: 5px;
+  height: 5px;
 
-  background-color: #454545;
   border-radius: 50%;
+  border: 5px solid #454545;
 
-  position: fixed;
+  border-top-color: white;
+  border-right-color: white;
 
+  animation: rotate 3s infinite reverse ease;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(359deg);
+  }
 }

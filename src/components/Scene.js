@@ -204,7 +204,9 @@ const Scene = ({ canvasRef }) => {
     <div ref={mountRef}>
       {/* Cursor */}
       <div className='cursor' style={{ left: cursorX, top: cursorY }} />
-      <div className='cursor-tail' style={{ left: cursorX, top: cursorY }} />
+      <div className='cursor-child' style={{ left: cursorX - 7, top: cursorY - 7 }} />
+      <div className='cursor-trail' style={{ left: cursorX - 7, top: cursorY - 7 }} />
+
     </div>
   )
 }
