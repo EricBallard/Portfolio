@@ -1,0 +1,92 @@
+
+
+@keyframes rotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(359deg);
+    }
+  }
+  
+  .cursor {
+    transform: translate(-50%, -50%);
+    left: 0;
+    top: 0;
+  
+    width: 20px;
+    height: 20px;
+  
+    /* Circlular border */
+    border: 2px solid white;
+    border-radius: 50%;
+  
+    position: fixed;
+  }
+  
+  .cursor-trail {
+    position: absolute;
+  
+    transform: translate(-50%, -50%);
+    left: 0;
+    top: 0;
+  
+    width: 10px;
+    height: 10px;
+  
+    border-radius: 50%;
+    background-color: #454545;
+    transition: width .3s linear, height .3s linear;
+  }
+  
+  .cursor-trail-moving {
+    position: absolute;
+  
+    transform: translate(-50%, -50%);
+    left: 0;
+    top: 0;
+  
+    width: 20px;
+    height: 20px;
+  
+    border-radius: 50%;
+    background-color: #454545;
+    transition: width .15s linear, height .15s linear;
+  }
+  
+
+  .cursor-child {
+    position: absolute;
+  
+    width: 5px;
+    height: 5px;
+  
+    border-radius: 50%;
+    border: 5px solid #454545;
+  
+    border-top-color: white;
+    border-right-color: white;
+  
+    background-color: white;
+
+    transition-delay: 0s;
+    transition: 0.1s linear;
+  }
+  
+  .cursor-child-moving {
+    position: absolute;
+    transform: translate(-3px, -3px);
+    left: 0;
+    top: 0;
+  
+  
+    width: 5px;
+    height: 5px;
+  
+    border-radius: 50%;
+    background-color: white;
+  
+    transition-delay:   0.5s;
+    transition:  0.1s linear;
+  }
+  
