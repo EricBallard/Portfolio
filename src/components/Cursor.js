@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react'
 import '../styles/cursor.css'
 
 // Component
-const Cursor = () => {
+const Cursor = ({ isTouchDevice }) => {
   // Mouse states
-  const [currentX, setX] = useState(0)
-  const [currentY, setY] = useState(0)
+  const [currentX, setX] = useState(-20)
+  const [currentY, setY] = useState(-20)
 
   const [isMoving, setMoving] = useState(false)
 
@@ -22,8 +22,19 @@ const Cursor = () => {
       else setMoving(true)
 
       // Update position
-      const x = e.pageX,
+      let x, y
+
+      if (isTouchDevice) {
+        const touch = e.touches[0]
+
+        if (touch) {
+          x = touch.clientX
+          y = touch.clientY
+        }
+      } else {
+        x = e.pageX
         y = e.pageY
+      }
 
       setX(x)
       setY(y)
@@ -48,30 +59,34 @@ const Cursor = () => {
     }
 
     // Register listener
-    window.addEventListener('mousemove', handler, false)
+    window.addEventListener(isTouchDevice ? 'touchmove' : 'mousemove', handler, false)
 
     // ComponentWillUnmount
     return () => {
       // Unregister listener
-      window.removeEventListener('mousemove', handler)
+      window.removeEventListener(isTouchDevice ? 'touchmove' : 'mousemove', handler)
     }
 
     // Dependencies
-  }, [setMoving, setX, setY])
+  }, [isTouchDevice, setMoving, setX, setY])
 
   // Return JSX
   return (
     <div>
       {/* Cursor */}
-      <div className='cursor' style={{ left: currentX, top: currentY }} />
       <div
-        className={isMoving ? 'cursor-child-moving' : 'cursor-child'}
-        style={{ left: currentX - 7, top: currentY - 7, animation: 'rotate 5s infinite linear' }}
-      />
-      <div
-        className={isMoving ? 'cursor-trail-moving' : 'cursor-trail'}
+        className={'cursor' + (isTouchDevice && isMoving ? ' moving' : '')}
         style={{ left: currentX, top: currentY }}
       />
+
+      {/* Rotating semi-circle + Trailing dot */}
+      <div
+        className={'cursor-trail' + (isMoving && !isTouchDevice ? ' moving' : '')}
+        style={{ left: currentX - 7, top: currentY - 7, animation: 'rotate 5s infinite linear' }}
+      />
+
+      {/* Center dot */}
+      <div className={'cursor-center' + (isMoving ? ' moving' : '')} style={{ left: currentX, top: currentY }} />
     </div>
   )
 }

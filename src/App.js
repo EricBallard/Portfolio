@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
 // Children components
 import LoadAnim from './components/LoadAnim'
@@ -10,11 +10,16 @@ const App = () => {
   // Refrences
   const canvasRef = useRef(null)
 
+  // Check for touch capability
+  const [isTouchDevice, setTouchDevice] = useState(
+    'ontouchstart' in window || navigator.MaxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
+  )
+
   // Return JSX, populated with children components
   return (
     <div className='app'>
       {/* Custom cursor with, animated in CSS */}
-      <Cursor />
+      <Cursor {...{ isTouchDevice }} />
 
       {/* Create canvas and bind refrence */}
       <canvas ref={canvasRef} className='canvas' />
