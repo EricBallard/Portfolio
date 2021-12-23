@@ -1,21 +1,19 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 
 // Functional Component
 const Scene = ({ canvasRef }) => {
   const mountRef = useRef(null)
 
+  // Animate smoothly between rotations
+  const [targetRotation, setTarget] = useState(0)
+
   useEffect(() => {
     // Set scene and perspective
     var scene = new THREE.Scene()
     scene.background = new THREE.Color('#454545')
 
-    var camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    )
+    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 
     // Webgl renderer
     var renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true })
@@ -56,8 +54,21 @@ const Scene = ({ canvasRef }) => {
       camera.updateProjectionMatrix()
     }
 
+    // Scene tilt handler
+    const tilt = e => {
+      let cell = e.detail.value,
+        inverse = cell > 4
+
+      // 4 is mid point, we'll use it as neutral, < 4 tilt left > 4 tilt right
+      let tilt = cell === 4 ? 0 : inverse ? cell - 4 : 4 - cell
+      tilt = 0.2 * (inverse ? -tilt : tilt)
+
+      setTarget(tilt.toFixed(2))
+    }
+
     // Register listeners
     window.addEventListener('resize', resize, false)
+    //window.addEventListener('tilt-scene', tilt, false)
 
     // Animate
     let animationID = -1
@@ -65,6 +76,15 @@ const Scene = ({ canvasRef }) => {
     const animate = function () {
       // Update Canvas
       texture.needsUpdate = true
+
+      // Update rotation
+      // let rotation = plane.rotation.y,
+      //   inverse = targetRotation < rotation
+
+      // if (rotation.toFixed(2) !== targetRotation) {
+      //   if (inverse) plane.rotation.y-= 0.01
+      //   else plane.rotation.y += 0.0
+      // }
 
       // Update scene
       renderer.render(scene, camera)
@@ -81,8 +101,9 @@ const Scene = ({ canvasRef }) => {
       cancelAnimationFrame(animationID)
       mount.removeChild(renderer.domElement)
       window.removeEventListener('resize', resize)
+     // window.removeEventListener('tilt-scene', tilt)
     }
-  }, [canvasRef])
+  }, [canvasRef, targetRotation, setTarget])
 
   // Return JSX
   return (

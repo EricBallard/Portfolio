@@ -9,70 +9,65 @@
 
 /* Main cursor */
 .cursor {
-  pointer-events: none;
+  position: absolute;
   transform: translate(-50%, -50%);
-  left: 0;
-  top: 0;
+  opacity: 1;
 
   width: 20px;
   height: 20px;
+
   border: 2px solid white;
   border-radius: 50%;
 
-  position: absolute;
-  transition: width .25s linear, height .25s linear;
+  transition: width 0.25s linear, height 0.25s linear;
 }
 
 .cursor.moving {
-  transform: translate(-50%, -50%);
-  left: 0;
-  top: 0;
-
   width: 100px;
   height: 100px;
 
-  border: 2px solid white;
-  border-radius: 50%;
+  transition: width 0s, height 0s;
+}
 
-  position: absolute;
-  transition: width .1s linear, height .1s linear;
+.cursor.hide {
+  opacity: 0;
+  transition: .3s linear;
+  transition-delay: 1.2s;
 }
 
 /* Center gray dot */
 .cursor-center {
-  pointer-events: none;
-  position: absolute;
-
   transform: translate(-50%, -50%);
-  left: 0;
-  top: 0;
+  position: absolute;
+  opacity: 1;
+
+  left: 10px;
+  top: 10px;
 
   width: 10px;
   height: 10px;
 
   border-radius: 50%;
   background-color: #454545;
-  transition: width 0.3s linear, height 0.3s linear;
+
+  transition: width 0.1s linear, height 0.1s linear, opacity 0s;
+  transition-delay: 0s, 0s, 0.25s;
+}
+
+.cursor-center.hide {
+  opacity: 0;
+  transition: 0s;
 }
 
 .cursor-center.moving {
-  position: absolute;
-
-  transform: translate(-50%, -50%);
-  left: 0;
-  top: 0;
-
   width: 20px;
   height: 20px;
 
-  border-radius: 50%;
-  background-color: #454545;
-  transition: width 0.15s linear, height 0.15s linear;
+  transition: width 0s, height 0s;
 }
 
 /* Rotating semi-circle + Trailing dot */
 .cursor-trail {
-  pointer-events: none;
   position: absolute;
 
   width: 5px;
@@ -86,23 +81,24 @@
 
   background-color: white;
 
-  transition-delay: 0s;
-  transition: 0s;
+  transition: 0.1s linear, border 1s, border-color 1s;
+  transition-delay: 0.1s, 0.1s, 0.1s;
 }
 
 .cursor-trail.moving {
-  position: absolute;
-  transform: translate(-3px, -3px);
-  left: 0;
-  top: 0;
-
   width: 2.5px;
   height: 2.5px;
 
   border-radius: 50%;
   border-color: white;
 
+  transition: 0.2s linear;
+}
 
-  transition-delay: 0.5s;
-  transition: 0.1s linear;
+
+.cursor-trail.hide{
+  
+  opacity: 0;
+  transition: .25s linear;
+  transition-delay: 1s;
 }

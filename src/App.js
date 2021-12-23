@@ -11,7 +11,7 @@ const App = () => {
   const canvasRef = useRef(null)
 
   // Check for touch capability
-  const [isTouchDevice, setTouchDevice] = useState(
+  const [isTouchDevice] = useState(
     'ontouchstart' in window || navigator.MaxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
   )
 
