@@ -3,30 +3,18 @@ import { useEffect, useState } from 'react'
 // Style
 import '../styles/cursor.css'
 
-// Custom event for managing scene tilt aka perspective transform
-const tiltEvent = new CustomEvent('tilt-scene', {
-  bubbles: true,
-  cancelable: true,
-  composed: false,
-  detail: { value: 0 },
-})
-
 // Component
 const Cursor = ({ isTouchDevice }) => {
-  // Mouse states
-  const [currentX, setX] = useState(window.innerWidth/ 2)
-  const [currentY, setY] = useState(window.innerHeight / 2)
+  // States
+  const [currentX, setX] = useState(window.innerWidth / 2)
+  const [currentY, setY] = useState(isTouchDevice ? window.innerHeight + 10 : -10)
 
   const [isMoving, setMoving] = useState(false)
   const [hideCursor, setHide] = useState(true)
 
   // ComponentDidMount
   useEffect(() => {
-    let timeoutID = undefined,
-      cell = undefined
-
-    const w = window.innerWidth,
-      cellW = w / 9
+    let timeoutID = undefined
 
     const handler = e => {
       e.preventDefault()

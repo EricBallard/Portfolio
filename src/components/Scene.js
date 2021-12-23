@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 
 // Functional Component
-const Scene = ({ canvasRef }) => {
+const Scene = ({ canvasRef, isTouchDevice }) => {
   const mountRef = useRef(null)
 
   // Animate smoothly between rotations
@@ -26,7 +26,7 @@ const Scene = ({ canvasRef }) => {
     mount.appendChild(element)
 
     // Define geometry
-    var geometry = new THREE.PlaneGeometry(5, 5, 5)
+    var geometry = new THREE.PlaneGeometry(5, 5)
 
     // Texture loader
     const ctx = canvasRef.current.getContext('2d')
@@ -37,7 +37,7 @@ const Scene = ({ canvasRef }) => {
       transparent: true,
     })
 
-    var plane = new THREE.Mesh(geometry, material)
+    const plane = new THREE.Mesh(geometry, material)
 
     // Add to scene, position camera
     scene.add(plane)
@@ -56,19 +56,33 @@ const Scene = ({ canvasRef }) => {
 
     // Scene tilt handler
     const tilt = e => {
-      let cell = e.detail.value,
-        inverse = cell > 4
+      // Update position
+      let x
 
-      // 4 is mid point, we'll use it as neutral, < 4 tilt left > 4 tilt right
-      let tilt = cell === 4 ? 0 : inverse ? cell - 4 : 4 - cell
-      tilt = 0.2 * (inverse ? -tilt : tilt)
+      if (isTouchDevice) {
+        let touch = e.touches[0]
+        if (!touch) return
 
-      setTarget(tilt.toFixed(2))
+        x = touch.clientX
+      } else {
+        x = e.pageX
+      }
+
+      const halfWidth = window.innerWidth / 2,
+        tilt = (x > halfWidth ? x - halfWidth : x) / halfWidth
+
+      if (x < halfWidth) {
+        // Tilt left (inversed)
+        plane.rotation.y = 1 - tilt
+      } else {
+        // Tilt right
+        plane.rotation.y = tilt - tilt * 2
+      }
     }
 
     // Register listeners
-    window.addEventListener('resize', resize, false)
-    //window.addEventListener('tilt-scene', tilt, false)
+    window.addEventListener('resize', resize)
+    window.addEventListener(isTouchDevice ? 'touchmove' : 'mousemove', tilt, { passive: true })
 
     // Animate
     let animationID = -1
@@ -76,15 +90,6 @@ const Scene = ({ canvasRef }) => {
     const animate = function () {
       // Update Canvas
       texture.needsUpdate = true
-
-      // Update rotation
-      // let rotation = plane.rotation.y,
-      //   inverse = targetRotation < rotation
-
-      // if (rotation.toFixed(2) !== targetRotation) {
-      //   if (inverse) plane.rotation.y-= 0.01
-      //   else plane.rotation.y += 0.0
-      // }
 
       // Update scene
       renderer.render(scene, camera)
@@ -98,12 +103,13 @@ const Scene = ({ canvasRef }) => {
     // ComponentWillUnmount
     return () => {
       // Clean up
+      window.removeEventListener('resize', resize)
+      window.addEventListener(isTouchDevice ? 'touchmove' : 'mousemove', tilt, { passive: true })
+
       cancelAnimationFrame(animationID)
       mount.removeChild(renderer.domElement)
-      window.removeEventListener('resize', resize)
-     // window.removeEventListener('tilt-scene', tilt)
     }
-  }, [canvasRef, targetRotation, setTarget])
+  }, [canvasRef, targetRotation, setTarget, isTouchDevice])
 
   // Return JSX
   return (

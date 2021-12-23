@@ -31,7 +31,7 @@ const App = () => {
 
       {/* Webgl 3D scene - Used to apply 'perspective transform'
         to animation by using 2D ctx as texture on a plane */}
-      <Scene {...{ canvasRef }} />
+      <Scene {...{ canvasRef, isTouchDevice }} />
     </div>
   )
 }
