@@ -1,12 +1,24 @@
 import { useEffect } from 'react'
 
+/**
+ *
+ * Animation is broken down in 'stages' as follows;
+ *
+ * 1) Spinning dots
+ * 2) Form into bar
+ * 3) Load bar progress
+ * 4) Form into window
+ */
+
 // Animation data
 const desiredFPS = 60,
   renderInterval = 1000 / desiredFPS
 
 let animStage = 1,
   lastRender = -1,
-  animSpeed = 0.075
+  // Used for stage 2/3
+  loadDelay = 0,
+  loadProg = 0
 
 let indicators = []
 
@@ -27,38 +39,26 @@ let cWidth = undefined,
   xOffset = undefined,
   yOffset = undefined
 
-CanvasRenderingContext2D.prototype.roundRect = function (
-  x,
-  y,
-  width,
-  height,
-  radius,
-  fill,
-  stroke
-) {
-  if (typeof stroke == 'undefined') {
-    stroke = true
-  }
-  if (typeof radius === 'undefined') {
-    radius = 5
-  }
+CanvasRenderingContext2D.prototype.roundRect = function (color, leftX, leftY, rightX, rightY, radius, inset) {
+  this.strokeStyle = color
+  this.fillStyle = color
+
+  // Draw
   this.beginPath()
-  this.moveTo(x + radius, y)
-  this.lineTo(x + width - radius, y)
-  this.quadraticCurveTo(x + width, y, x + width, y + radius)
-  this.lineTo(x + width, y + height - radius)
-  this.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
-  this.lineTo(x + radius, y + height)
-  this.quadraticCurveTo(x, y + height, x, y + height - radius)
-  this.lineTo(x, y + radius)
-  this.quadraticCurveTo(x, y, x + radius, y)
+
+  // Draw center
+  this.moveTo(leftX, leftY)
+  this.lineTo(rightX, rightY)
+  this.stroke()
+
+  // Use cirlces to draw rounded edges
+  this.arc(leftX + (inset ? radius : 0), leftY, radius, 0, 2 * Math.PI)
+  this.fill()
+
+  this.arc(rightX - (inset ? radius : 0), rightY, radius, 0, 2 * Math.PI)
+  this.fill()
+
   this.closePath()
-  if (stroke) {
-    this.stroke()
-  }
-  if (fill) {
-    this.fill()
-  }
 }
 
 const draw = ctx => {
@@ -66,24 +66,99 @@ const draw = ctx => {
   ctx.fillStyle = '#454545'
   ctx.fillRect(0, 0, cWidth, cHeight)
 
-  /** DEBUG */
-  // ctx.strokeStyle = 'green'
-  // ctx.lineWidth = 10;
-  // ctx.strokeRect(2, 0, cWidth, cHeight)
-
   // Set draw color
+  ctx.lineWidth = 120
   ctx.fillStyle = 'white'
+  ctx.strokeStyle = 'white'
 
-  // STAGE 2 - Draw loading bar
-  if (animStage === 2) {
-    ctx.roundRect(xOffset - 100, yOffset - 15, 200, 30, true, true)
+  if (animStage === 4) {
+    let right = indicators[3],
+      left = indicators[4]
+
+    loadProg += 100
+    ctx.lineWidth = loadProg
+    ctx.roundRect('black', left.x - loadProg / Math.PI, left.y, right.x + loadProg / Math.PI, right.y, 60, true)
+    return
   }
 
-  // STAGE 1 - Draw dots aka indicators
+  // Stage 3
+  if (animStage === 3) {
+    let right = indicators[3],
+      left = indicators[4]
+
+    // Bar
+    ctx.roundRect('white', left.x, left.y, right.x, right.y, 60)
+
+    if (loadDelay < 60) loadDelay += 10
+    else loadProg += 20
+
+    let loadLeft = left.x - (60 - loadDelay),
+      loadRight = loadDelay === 60 ? loadLeft + loadProg : loadLeft
+
+    // Stop at end
+    if (loadRight >= right.x) {
+      loadRight = right.x
+      loadProg = 0
+      animStage++
+    }
+
+    // Progress
+    ctx.roundRect('black', loadLeft, left.y, loadRight, right.y, loadDelay)
+
+    return
+  }
+
+  // Stage 1+2
   for (let index = 0; index < 5; index++) {
     const i = indicators[index]
 
     if (i === null) continue
+
+    // STAGE 2 - Draw loading bar
+    if (index >= 3 && animStage >= 2) {
+      // Honor freeze in place or progress in step
+      if (!i.freeze) i.step += 30
+
+      // Center bar
+      if (index === 3) {
+        let center = indicators[0]
+        loadProg += 10
+
+        ctx.roundRect('white', center.x - loadProg, center.y, indicators[0].x + loadProg, indicators[0].y, 60)
+
+        // Stop at end
+        if (center.x - loadProg <= indicators[4].x) {
+          loadProg = 0
+          animStage++
+        }
+      }
+
+      // Draw line with progresing width as step
+      ctx.save()
+      ctx.beginPath()
+
+      // Outer border
+      let borderY = i.y + (i.backwards ? -55 : 55)
+      ctx.moveTo(i.x, borderY)
+      ctx.stroke()
+
+      ctx.lineWidth = 10
+      ctx.lineTo(i.x + (i.backwards ? -i.step : i.step), borderY)
+
+      let targetDif = i.backwards ? i.x - indicators[4].x : indicators[3].x - i.x
+
+      // Stop at adjacent dot x
+      if (i.step >= targetDif) {
+        i.step = targetDif
+        i.freeze = true
+      }
+
+      ctx.stroke()
+      ctx.restore()
+      continue
+    }
+
+    // STAGE 1 - Draw rotating dots
 
     // Save context
     ctx.save()
@@ -124,8 +199,8 @@ const draw = ctx => {
       }
     } else {
       // Ciruclar motion
-      i.x = xOffset + 400 * Math.cos(animSpeed * i.step)
-      i.y = yOffset + 400 * Math.sin(animSpeed * i.step)
+      i.x = xOffset + 400 * Math.cos(0.075 * i.step)
+      i.y = yOffset + 400 * Math.sin(0.075 * i.step)
 
       if (i.backwards) i.step--
       else i.step++
@@ -143,9 +218,14 @@ const draw = ctx => {
       }
 
       if (index === 4 && i.step === -1) {
+        const left = indicators[1],
+          right = indicators[2]
+
         // Set to null so we're not drawing 2 extra cirlces every frame
-        indicators[3] = null
-        indicators[4] = null
+        // Additionally we'll re-purpose these to be lines
+
+        indicators[3] = new Indicator(left.x, left.y, 0, 0, true, true)
+        indicators[4] = new Indicator(right.x, right.y, 0, 0, false, false)
         animStage++
       }
     }
@@ -173,9 +253,9 @@ const LoadAnim = ({ canvasRef }) => {
     const canvas = canvasRef.current,
       ctx = canvas.getContext('2d')
 
-    // Size to window dimensions
-    canvas.width = 2048 //window.innerWidth
-    canvas.height = 2048 //window.innerHeight
+    // This canvas is to be used as a texture, we'll preset it as 2k for a high quality amongst all devices
+    canvas.width = 2048
+    canvas.height = 2048
 
     cWidth = canvas.width
     cHeight = canvas.height

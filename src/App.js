@@ -17,7 +17,7 @@ const App = () => {
 
   // Return JSX, populated with children components
   return (
-    <div className='app'>
+    <div className='app' >
       {/* Custom cursor with, animated in CSS */}
       <Cursor {...{ isTouchDevice }} />
 

@@ -92,12 +92,11 @@
   border-radius: 50%;
   border-color: white;
 
-  transition: 0.2s linear;
+  transition: width 0s linear, height 0s linear, 0.2s linear;
 }
 
 
 .cursor-trail.hide{
-  
   opacity: 0;
   transition: .25s linear;
   transition-delay: 1s;

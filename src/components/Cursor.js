@@ -63,7 +63,7 @@ const Cursor = ({ isTouchDevice }) => {
 
         // Schedule cursor to disappear (touch device only)
         if (isTouchDevice) timeoutID = setTimeout(() => setHide(true), 500)
-      }, 500)
+      }, 750)
     }
 
     // Register listeners
@@ -80,7 +80,7 @@ const Cursor = ({ isTouchDevice }) => {
 
   // Return JSX
   return (
-    <div>
+    <div onTouchMove={e => e.preventDefault()}>
       {/* Rotating semi-circle + Trailing dot */}
       <div
         className={'cursor-trail' + (hideCursor ? ' hide' : isMoving ? ' moving' : '')}
