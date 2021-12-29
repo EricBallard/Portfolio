@@ -1,14 +1,19 @@
 import { useRef, useState } from 'react'
 
 // Children components
-import LoadAnim from './components/LoadAnim'
 import Cursor from './components/Cursor'
 import Scene from './components/Scene'
+
+import LoadAnim from './components/animations/Load'
+import IntroAnim from './components/animations/Intro'
 
 // Parent Component
 const App = () => {
   // Refrences
   const canvasRef = useRef(null)
+
+  //States
+  const [isLoading, setLoading] = useState(true)
 
   // Check for touch capability
   const [isTouchDevice] = useState(
@@ -17,7 +22,7 @@ const App = () => {
 
   // Return JSX, populated with children components
   return (
-    <div className='app' >
+    <div className='app'>
       {/* Custom cursor with, animated in CSS */}
       <Cursor {...{ isTouchDevice }} />
 
@@ -27,7 +32,7 @@ const App = () => {
       {/* Render components and pass refrence to canvas */}
 
       {/* 2D canvas animation  */}
-      <LoadAnim {...{ canvasRef }} />
+      {isLoading ? <LoadAnim {...{ canvasRef, setLoading }} /> : <IntroAnim {...{ canvasRef }} />}
 
       {/* Webgl 3D scene - Used to apply 'perspective transform'
         to animation by using 2D ctx as texture on a plane */}

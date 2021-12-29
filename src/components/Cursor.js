@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 // Style
-import '../styles/cursor.css'
+import '../styles/Cursor.css'
 
 // Component
 const Cursor = ({ isTouchDevice }) => {
