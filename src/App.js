@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 
 // Children components
 import Cursor from './components/Cursor'
@@ -14,23 +14,29 @@ const App = () => {
 
   //States
   const [isLoading, setLoading] = useState(true)
+  const [showCursor, toggleCursor] = useState(true)
 
   // Check for touch capability
   const [isTouchDevice] = useState(
     'ontouchstart' in window || navigator.MaxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
   )
 
+  // Listen for end of load anim
+  useEffect(() => {
+    // Show default desktop pointer after loading anim (Non touch device only)
+    if (!isLoading && !isTouchDevice) toggleCursor(false)
+  }, [isLoading, isTouchDevice, toggleCursor])
+
   // Return JSX, populated with children components
   return (
-    <div className='app'>
+    <div className='app' style={{ cursor: showCursor ? 'inherit' : 'default' }}>
       {/* Custom cursor with, animated in CSS */}
-      <Cursor {...{ isTouchDevice }} />
+      {showCursor ? <Cursor {...{ isTouchDevice }} /> : null}
 
       {/* Create canvas and bind refrence */}
       <canvas ref={canvasRef} className='canvas' />
 
       {/* Render components and pass refrence to canvas */}
-
       {/* 2D canvas animation  */}
       {isLoading ? <LoadAnim {...{ canvasRef, setLoading }} /> : <IntroAnim {...{ canvasRef }} />}
 

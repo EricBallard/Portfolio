@@ -14,6 +14,57 @@ import { useEffect } from 'react'
 const desiredFPS = 60,
   renderInterval = 1000 / desiredFPS
 
+// Show Toolbar
+const showToolbar = (ctx, height) => {
+  // Draw top 'window bar'
+  ctx.fillStyle = 'white'
+  ctx.fillRect(0, 0, 2048, height)
+
+  // 'Window title'
+  ctx.fillStyle = 'black'
+  ctx.font = '100px Verdana Bold'
+
+  ctx.fillText('Terminal', 1024 - 180, 85)
+
+  // 'Window controls'
+  ctx.strokeStyle = 'black'
+  ctx.lineWidth = 15
+
+  ctx.beginPath()
+
+  // Draw horizontal line
+  ctx.moveTo(1675, 50)
+  ctx.lineTo(1750, 50)
+
+  // Draw left half of X
+  ctx.moveTo(1900, 25)
+  ctx.lineTo(1950, 75)
+
+  // Draw right half of X
+  ctx.moveTo(1950, 25)
+  ctx.lineTo(1900, 75)
+
+  ctx.stroke()
+  return height > 99
+}
+
+// Print Text
+const typeText = (ctx, prog, data, showCursor) => {
+  let text
+
+  for (let i = 0; i < prog; i++) {
+    let char = data[i]
+    text = !text ? char : text + char
+  }
+
+  if (!text) return
+
+  ctx.fillStyle = 'white'
+  ctx.fillText('~: ' + text + (showCursor ? '|' : ''), 256, 256)
+
+  return prog === data.length
+}
+
 // Component
 const IntroAnim = ({ canvasRef }) => {
   //ComponentDidMount
@@ -27,43 +78,57 @@ const IntroAnim = ({ canvasRef }) => {
 
     // Animation
     let animID = -1,
-      // animStage = 1,
-      lastRender = -1
+      animStage = 0,
+      lastRender = -1,
+      barHeight = 0
 
+    // Terminal cursor
+    let blinks = 0,
+      showCursor = true,
+      cursorTime = undefined
+
+    let typeProg = undefined,
+      shouldType = false,
+      typeData = []
+
+    // Animation stages
     const animate = () => {
-      // Clear canvas
-      ctx.fillStyle = 'black'
-      ctx.fillRect(0, 0, cWidth, cHeight)
+      switch (animStage) {
+        case 3:
+          return
+        case 2:
+          // Clear canvas
+          ctx.fillStyle = 'black'
+          ctx.fillRect(0, barHeight, cWidth, cHeight - barHeight)
 
-      // Draw top 'window bar'
-      ctx.fillStyle = 'white'
-      ctx.fillRect(0, 0, 2048, 100)
+          // Type
+          if (typeText(ctx, typeProg, typeData, showCursor, shouldType)) animStage++
+          else if (shouldType) typeProg++
+          return
+        case 1:
+          // Clear canvas
+          ctx.fillStyle = 'black'
+          ctx.fillRect(0, barHeight, cWidth, cHeight - barHeight)
 
-      // 'Window title'
-      ctx.fillStyle = 'black'
-      ctx.font = '100px Verdana Bold'
+          ctx.fillStyle = 'white'
+          ctx.fillText('~: ' + (showCursor ? '|' : ''), 256, 256)
 
-      ctx.fillText('Terminal', 1024 - 180, 85)
+          if (blinks > 4) {
+            animStage++
+            typeProg = 0
+            typeData = 'Hello World!'.split('')
+          }
+          return
+        default:
+          // Clear canvas
+          ctx.fillStyle = 'black'
+          ctx.fillRect(0, 0, cWidth, cHeight)
 
-      // 'Window controls'
-      ctx.strokeStyle = 'black'
-      ctx.lineWidth = 15
-
-      ctx.beginPath()
-
-      // Draw horizontal line
-      ctx.moveTo(1675, 50)
-      ctx.lineTo(1750, 50)
-
-      // Draw left half of X
-      ctx.moveTo(1900, 25)
-      ctx.lineTo(1950, 75)
-
-      // Draw right half of X
-      ctx.moveTo(1950, 25)
-      ctx.lineTo(1900, 75)
-
-      ctx.stroke()
+          // Draw 'window controls'
+          if (showToolbar(ctx, barHeight)) animStage++
+          else barHeight += 5
+          break
+      }
     }
 
     // Render loop
@@ -72,8 +137,16 @@ const IntroAnim = ({ canvasRef }) => {
       const now = Date.now()
 
       if (!lastRender || now - lastRender >= renderInterval) {
+        // Blink cursor
+        if (!cursorTime || now - cursorTime > 500) {
+          shouldType = Math.random() < 0.1
+          showCursor = !showCursor
+          cursorTime = now
+          blinks++
+        }
+
         lastRender = now
-        animate()
+        animate(now)
       }
 
       // Animation loop
