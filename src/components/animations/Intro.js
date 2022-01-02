@@ -57,10 +57,8 @@ const typeText = (ctx, prog, data, showCursor) => {
     text = !text ? char : text + char
   }
 
-  if (!text) return
-
   ctx.fillStyle = 'white'
-  ctx.fillText('~: ' + text + (showCursor ? '|' : ''), 256, 256)
+  ctx.fillText('~: ' + (text ? text : '') + (showCursor ? '|' : ''), 256, 256)
 
   return prog === data.length
 }
@@ -88,22 +86,75 @@ const IntroAnim = ({ canvasRef }) => {
       cursorTime = undefined
 
     let typeProg = undefined,
+      typeTime = undefined,
+      reverseTyping = false,
+      doneTyping = false,
       shouldType = false,
       typeData = []
 
     // Animation stages
     const animate = () => {
       switch (animStage) {
+        case 4:
+          // Clear canvas
+          ctx.fillStyle = 'black'
+          ctx.fillRect(0, barHeight + 256, cWidth, cHeight - barHeight - 256)
+
+          ctx.fillStyle = 'white'
+          ctx.fillText('ericballard', 256, 512)
+          ctx.fillText('~: ' + (showCursor ? '|' : ''), 256, 768)
+          return
         case 3:
+          // Clear canvas
+          ctx.fillStyle = 'black'
+          ctx.fillRect(0, barHeight, cWidth, cHeight - barHeight)
+
+          // Type a
+          if (typeText(ctx, typeProg, typeData, showCursor, shouldType)) {
+            animStage++
+          } else if (shouldType) {
+            shouldType = false
+
+            // Progress typing - check if finished
+            if (typeProg++ === typeData.length) {
+              blinks = 0
+            }
+          }
           return
         case 2:
           // Clear canvas
           ctx.fillStyle = 'black'
           ctx.fillRect(0, barHeight, cWidth, cHeight - barHeight)
 
-          // Type
-          if (typeText(ctx, typeProg, typeData, showCursor, shouldType)) animStage++
-          else if (shouldType) typeProg++
+          // Finished typing desired word
+          if (typeText(ctx, typeProg, typeData, showCursor, shouldType)) {
+            if (doneTyping) {
+              // Let cursor blink and than init backspace
+              if (blinks > 4) {
+                reverseTyping = true
+                typeProg--
+              }
+            } else {
+              // Reset blink counter
+              doneTyping = true
+              blinks = 0
+            }
+            // In progress of typing
+          } else if (shouldType) {
+            shouldType = false
+
+            // Reverse type progress (backspace) - check if finished, prog anim
+            if (reverseTyping) {
+              if (typeProg-- === 0) {
+                typeData = 'whoami'.split('')
+                typeProg = 0
+                animStage++
+              }
+              // Progress typing - check if finished
+            } else if (typeProg++ === typeData.length) {
+              blinks = 0
+            }
+          }
           return
         case 1:
           // Clear canvas
@@ -113,10 +164,11 @@ const IntroAnim = ({ canvasRef }) => {
           ctx.fillStyle = 'white'
           ctx.fillText('~: ' + (showCursor ? '|' : ''), 256, 256)
 
+          // Allow cursor to blink, init typing data
           if (blinks > 4) {
-            animStage++
             typeProg = 0
-            typeData = 'Hello World!'.split('')
+            animStage++
+            typeData = 'Hello World'.split('')
           }
           return
         default:
@@ -139,10 +191,18 @@ const IntroAnim = ({ canvasRef }) => {
       if (!lastRender || now - lastRender >= renderInterval) {
         // Blink cursor
         if (!cursorTime || now - cursorTime > 500) {
-          shouldType = Math.random() < 0.1
           showCursor = !showCursor
           cursorTime = now
+
           blinks++
+        }
+
+        // Type
+        if (!typeTime) {
+          typeTime = now
+        } else if (now - typeTime > Math.floor(Math.random() * 200) + 200) {
+          shouldType = true
+          typeTime = now
         }
 
         lastRender = now

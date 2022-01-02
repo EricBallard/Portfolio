@@ -1,6 +1,6 @@
 {
   "name": "portfolio",
-  "version": "0.4",
+  "version": "0.4.1",
   "private": true,
   "dependencies": {
     "@react-three/fiber": "^7.0.24",
